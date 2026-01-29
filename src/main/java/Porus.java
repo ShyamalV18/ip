@@ -4,6 +4,7 @@ public class Porus {
 
     private static final String DIVIDER =
             "--------------------------------------------------";
+    private static final int MAX_TASKS = 100;
 
     public static void main(String[] args) {
         String logo =
@@ -16,10 +17,11 @@ public class Porus {
         printGreeting(logo);
 
         Scanner scanner = new Scanner(System.in);
+        String[] tasks = new String[MAX_TASKS];
+        int taskCount = 0;
 
         while (true) {
             String userInput = scanner.nextLine();
-
             if (userInput.equals("bye")) {
                 System.out.println(DIVIDER);
                 System.out.println("Farewell. Glad to be of service!");
@@ -27,10 +29,22 @@ public class Porus {
                 break;
             }
 
+            if (userInput.equals("list")) {
+                printList(tasks, taskCount);
+                continue;
+            }
+
+            if (taskCount < MAX_TASKS) {
+
+                tasks[taskCount] = userInput;
+                taskCount++;
+            }
+
             System.out.println(DIVIDER);
-            System.out.println("  " + userInput);
+            System.out.println("  added: " + userInput);
             System.out.println(DIVIDER);
         }
+
     }
 
     private static void printGreeting(String logo) {
@@ -39,6 +53,19 @@ public class Porus {
         System.out.println("How may I assist you today?");
         System.out.println(DIVIDER);
     }
+
+    private static void printList(String[] tasks, int taskCount) {
+        System.out.println(DIVIDER);
+
+        for (int i = 0; i < taskCount; i++) {
+            System.out.println("  " + (i + 1) + ". " + tasks[i]);
+        }
+
+        System.out.println(DIVIDER);
+
+    }
+
+
 }
 
 
