@@ -4,6 +4,8 @@ public class Porus {
 
     private static final String DIVIDER =
             "--------------------------------------------------";
+
+    //Max number of tasks the chatbot can store
     private static final int MAX_TASKS = 100;
 
     public static void main(String[] args) {
@@ -13,7 +15,7 @@ public class Porus {
                         + "| |_) || | | | | |_) || | | |  \\___ \\\n"
                         + "|  __/ | |_| | |  _ < | |_| |   ___) |\n"
                         + "|_|     \\___/  |_| \\_\\ \\___/   |____/\n";
-
+        //prints chatbot greeting at startup.
         System.out.println("Greetings! I'm");
         System.out.println(logo);
         System.out.println("(Personally Operating Real Understanding Service)");
@@ -22,9 +24,12 @@ public class Porus {
 
         Scanner scanner = new Scanner(System.in);
 
+        //array to store tasks
         Task[] tasks = new Task[MAX_TASKS];
+
         int taskCount = 0;
 
+        // Main loop
         while (true) {
             String userInput = scanner.nextLine().trim();
 
@@ -34,12 +39,12 @@ public class Porus {
                 System.out.println(DIVIDER);
                 break;
             }
-
+            //lists all stored tasks
             if (userInput.equals("list")) {
                 printList(tasks, taskCount);
                 continue;
             }
-
+            //mark task as done
             if (userInput.startsWith("mark ")) {
                 int taskNumber = Integer.parseInt(userInput.substring(5).trim());
                 int index = taskNumber - 1;
@@ -52,7 +57,7 @@ public class Porus {
                 System.out.println(DIVIDER);
                 continue;
             }
-
+            //unmarks tasks
             if (userInput.startsWith("unmark ")) {
                 int taskNumber = Integer.parseInt(userInput.substring(7).trim());
                 int index = taskNumber - 1;
@@ -65,14 +70,14 @@ public class Porus {
                 System.out.println(DIVIDER);
                 continue;
             }
-
+            //prevents adding more tasks
             if (taskCount >= MAX_TASKS) {
                 System.out.println(DIVIDER);
                 System.out.println("My scroll is full. I cannot record more quests.");
                 System.out.println(DIVIDER);
                 continue;
             }
-
+            //adds a new task using userinput as description
             tasks[taskCount] = new Task(userInput);
             taskCount++;
 
@@ -82,10 +87,12 @@ public class Porus {
         }
     }
 
+    //prints current list of tasks with numbering and status icons.
     private static void printList(Task[] tasks, int taskCount) {
         System.out.println(DIVIDER);
         System.out.println("Bretheren, please complete thy tasks");
 
+        //handle empty task list
         if (taskCount == 0) {
             System.out.println("  (No quests assigned yet.)");
         }
