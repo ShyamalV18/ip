@@ -1,113 +1,57 @@
 import java.util.Scanner;
 
+/**
+ * Entry point and command loop for the Porus chatbot.
+ * Reads user commands, creates tasks, marks/unmarks tasks, and lists tasks.
+ */
 public class Porus {
 
-    private static final String DIVIDER =
-            "--------------------------------------------------";
-
-    // Max number of tasks the chatbot can store
+    private static final String DIVIDER = "--------------------------------------------------";
     private static final int MAX_TASKS = 100;
 
-    public static void main(String[] args) {
-        String logo =
-                " ____    ___    ____   _   _    ____ \n"
-                        + "|  _ \\  / _ \\  |  _ \\ | | | |  / ___|\n"
-                        + "| |_) || | | | | |_) || | | |  \\___ \\\n"
-                        + "|  __/ | |_| | |  _ < | |_| |   ___) |\n"
-                        + "|_|     \\___/  |_| \\_\\ \\___/   |____/\n";
+    private static final String COMMAND_BYE = "bye";
+    private static final String COMMAND_LIST = "list";
+    private static final String COMMAND_MARK = "mark ";
+    private static final String COMMAND_UNMARK = "unmark ";
+    private static final String COMMAND_TODO = "todo ";
+    private static final String COMMAND_DEADLINE = "deadline ";
+    private static final String COMMAND_EVENT = "event ";
 
-        // Prints chatbot greeting at startup.
-        System.out.println("Greetings! I'm");
-        System.out.println(logo);
-        System.out.println("(Personally Operating Real Understanding Service)");
-        System.out.println("How may I assist you today?");
-        System.out.println(DIVIDER + "\n");
+    private static final String DEADLINE_BY_DELIMITER = " /by ";
+    private static final String EVENT_FROM_DELIMITER = " /from ";
+    private static final String EVENT_TO_DELIMITER = " /to ";
+
+    public static void main(String[] args) {
+        printGreeting();
 
         Scanner scanner = new Scanner(System.in);
 
-        // Array to store tasks (can store Todo/Deadline/Event because all are Tasks)
         Task[] tasks = new Task[MAX_TASKS];
         int taskCount = 0;
 
-        // Main loop: keep reading commands until user says "bye"
         while (true) {
             String userInput = scanner.nextLine().trim();
 
-            // Exit command
-            if (userInput.equals("bye")) {
-                System.out.println(DIVIDER);
-                System.out.println("Farewell. Glad to be of service!");
-                System.out.println(DIVIDER);
+            if (userInput.equals(COMMAND_BYE)) {
+                printGoodbye();
                 break;
             }
 
-            // List all stored tasks
-            if (userInput.equals("list")) {
+            if (userInput.equals(COMMAND_LIST)) {
                 printList(tasks, taskCount);
                 continue;
             }
 
-            // Mark task as done: "mark 2"
-            if (userInput.startsWith("mark ")) {
-                String numberPart = userInput.substring(5).trim();
-
-                if (!numberPart.matches("\\d+")) {
-                    System.out.println(DIVIDER);
-                    System.out.println("Kindly provide a valid task number to mark.");
-                    System.out.println(DIVIDER);
-                    continue;
-                }
-
-                int taskNumber = Integer.parseInt(numberPart);
-                int index = taskNumber - 1;
-
-                if (index < 0 || index >= taskCount) {
-                    System.out.println(DIVIDER);
-                    System.out.println("That task number does not exist.");
-                    System.out.println(DIVIDER);
-                    continue;
-                }
-
-                tasks[index].setDone(true);
-
-                System.out.println(DIVIDER);
-                System.out.println("Fantabulous! The deed is done. Marked as complete:");
-                System.out.println("  " + tasks[index]);
-                System.out.println(DIVIDER);
+            if (userInput.startsWith(COMMAND_MARK)) {
+                handleMark(tasks, taskCount, userInput, true);
                 continue;
             }
 
-            // Unmark task: "unmark 2"
-            if (userInput.startsWith("unmark ")) {
-                String numberPart = userInput.substring(7).trim();
-
-                if (!numberPart.matches("\\d+")) {
-                    System.out.println(DIVIDER);
-                    System.out.println("Kindly provide a valid task number to unmark.");
-                    System.out.println(DIVIDER);
-                    continue;
-                }
-
-                int taskNumber = Integer.parseInt(numberPart);
-                int index = taskNumber - 1;
-
-                if (index < 0 || index >= taskCount) {
-                    System.out.println(DIVIDER);
-                    System.out.println("That task number does not exist.");
-                    System.out.println(DIVIDER);
-                    continue;
-                }
-
-                tasks[index].setDone(false);
-
-                System.out.println(DIVIDER);
-                System.out.println("Very well. I shall consider it unfinished:");
-                System.out.println("  " + tasks[index]);
-                System.out.println(DIVIDER);
+            if (userInput.startsWith(COMMAND_UNMARK)) {
+                handleMark(tasks, taskCount, userInput, false);
                 continue;
             }
 
-            // Prevent adding more tasks if storage is full
             if (taskCount >= MAX_TASKS) {
                 System.out.println(DIVIDER);
                 System.out.println("My scroll is full. I cannot record more quests.");
@@ -115,124 +59,175 @@ public class Porus {
                 continue;
             }
 
-            // LEVEL 4: Add task types (Todo / Deadline / Event)
-            // todo <description>
-            if (userInput.startsWith("todo ")) {
-                String description = userInput.substring(5).trim();
-
-                if (description.isEmpty()) {
-                    System.out.println(DIVIDER);
-                    System.out.println("A todo needs a description, brave one.");
-                    System.out.println(DIVIDER);
-                    continue;
-                }
-
-                tasks[taskCount] = new Todo(description);
-                taskCount++;
-
-                System.out.println(DIVIDER);
-                System.out.println("Got it. I've added this task:");
-                System.out.println("  " + tasks[taskCount - 1]);
-                System.out.println("Now you have " + taskCount + " tasks in the list.");
-                System.out.println(DIVIDER);
+            Task newTask = parseTask(userInput);
+            if (newTask == null) {
+                // Invalid command format.
                 continue;
             }
 
-            // deadline <description> /by <by>
-            if (userInput.startsWith("deadline ")) {
-                String rest = userInput.substring(9).trim();
-                String[] parts = rest.split(" /by ", 2);
-
-                if (parts.length < 2) {
-                    System.out.println(DIVIDER);
-                    System.out.println("Format: deadline <description> /by <by>");
-                    System.out.println(DIVIDER);
-                    continue;
-                }
-
-                String description = parts[0].trim();
-                String by = parts[1].trim();
-
-                if (description.isEmpty() || by.isEmpty()) {
-                    System.out.println(DIVIDER);
-                    System.out.println("A deadline needs BOTH a description and a /by value.");
-                    System.out.println(DIVIDER);
-                    continue;
-                }
-
-                tasks[taskCount] = new Deadline(description, by);
-                taskCount++;
-
-                System.out.println(DIVIDER);
-                System.out.println("Got it. I've added this task:");
-                System.out.println("  " + tasks[taskCount - 1]);
-                System.out.println("Now you have " + taskCount + " tasks in the list.");
-                System.out.println(DIVIDER);
-                continue;
-            }
-
-            // event <description> /from <from> /to <to>
-            if (userInput.startsWith("event ")) {
-                String rest = userInput.substring(6).trim();
-                String[] firstSplit = rest.split(" /from ", 2);
-
-                if (firstSplit.length < 2) {
-                    System.out.println(DIVIDER);
-                    System.out.println("Format: event <description> /from <from> /to <to>");
-                    System.out.println(DIVIDER);
-                    continue;
-                }
-
-                String description = firstSplit[0].trim();
-                String[] secondSplit = firstSplit[1].split(" /to ", 2);
-
-                if (secondSplit.length < 2) {
-                    System.out.println(DIVIDER);
-                    System.out.println("Format: event <description> /from <from> /to <to>");
-                    System.out.println(DIVIDER);
-                    continue;
-                }
-
-                String from = secondSplit[0].trim();
-                String to = secondSplit[1].trim();
-
-                if (description.isEmpty() || from.isEmpty() || to.isEmpty()) {
-                    System.out.println(DIVIDER);
-                    System.out.println("An event needs description, /from, and /to.");
-                    System.out.println(DIVIDER);
-                    continue;
-                }
-
-                tasks[taskCount] = new Event(description, from, to);
-                taskCount++;
-
-                System.out.println(DIVIDER);
-                System.out.println("Got it. I've added this task:");
-                System.out.println("  " + tasks[taskCount - 1]);
-                System.out.println("Now you have " + taskCount + " tasks in the list.");
-                System.out.println(DIVIDER);
-                continue;
-            }
-
-            // If user didn't type todo/deadline/event, treat it as a normal Todo-style task
-            tasks[taskCount] = new Todo(userInput);
+            tasks[taskCount] = newTask;
             taskCount++;
 
             System.out.println(DIVIDER);
-            System.out.println("  added: " + userInput);
+            System.out.println("  added: " + newTask);
+            System.out.println("  Now you have " + taskCount + " tasks in the list.");
             System.out.println(DIVIDER);
         }
 
-        // Good practice to close scanner when done
         scanner.close();
     }
 
-    // Prints current list of tasks with numbering and status/type (uses each task's toString)
+    /**
+     * Prints the startup greeting and logo.
+     */
+    private static void printGreeting() {
+        String logo =
+                " ____    ___    ____   _   _    ____ \n"
+                        + "|  _ \\  / _ \\  |  _ \\ | | | |  / ___|\n"
+                        + "| |_) || | | | | |_) || | | |  \\___ \\\n"
+                        + "|  __/ | |_| | |  _ < | |_| |   ___) |\n"
+                        + "|_|     \\___/  |_| \\_\\ \\___/   |____/\n";
+
+        System.out.println("Greetings! I'm");
+        System.out.println(logo);
+        System.out.println("(Personally Operating Real Understanding Service)");
+        System.out.println("How may I assist you today?");
+        System.out.println(DIVIDER);
+    }
+
+    /**
+     * Prints the goodbye message and divider.
+     */
+    private static void printGoodbye() {
+        System.out.println(DIVIDER);
+        System.out.println("Farewell. Glad to be of service!");
+        System.out.println(DIVIDER);
+    }
+
+    /**
+     * Parses user input into a Task object if it matches a supported Level 4 command.
+     * Returns null (and prints a message) if the command format is invalid.
+     *
+     * Supported:
+     * - todo DESCRIPTION
+     * - deadline DESCRIPTION /by BY
+     * - event DESCRIPTION /from FROM /to TO
+     *
+     * @param userInput raw user input line
+     * @return created Task, or null if invalid
+     */
+    private static Task parseTask(String userInput) {
+        if (userInput.startsWith(COMMAND_TODO)) {
+            String description = userInput.substring(COMMAND_TODO.length()).trim();
+            if (description.isEmpty()) {
+                printInvalidFormat("todo DESCRIPTION");
+                return null;
+            }
+            return new Todo(description);
+        }
+
+        if (userInput.startsWith(COMMAND_DEADLINE)) {
+            String rest = userInput.substring(COMMAND_DEADLINE.length()).trim();
+            int byIndex = rest.indexOf(DEADLINE_BY_DELIMITER);
+            if (byIndex < 0) {
+                printInvalidFormat("deadline DESCRIPTION /by BY");
+                return null;
+            }
+
+            String description = rest.substring(0, byIndex).trim();
+            String by = rest.substring(byIndex + DEADLINE_BY_DELIMITER.length()).trim();
+
+            if (description.isEmpty() || by.isEmpty()) {
+                printInvalidFormat("deadline DESCRIPTION /by BY");
+                return null;
+            }
+
+            return new Deadline(description, by);
+        }
+
+        if (userInput.startsWith(COMMAND_EVENT)) {
+            String rest = userInput.substring(COMMAND_EVENT.length()).trim();
+
+            int fromIndex = rest.indexOf(EVENT_FROM_DELIMITER);
+            int toIndex = rest.indexOf(EVENT_TO_DELIMITER);
+
+            if (fromIndex < 0 || toIndex < 0 || toIndex < fromIndex) {
+                printInvalidFormat("event DESCRIPTION /from FROM /to TO");
+                return null;
+            }
+
+            String description = rest.substring(0, fromIndex).trim();
+            String from = rest.substring(fromIndex + EVENT_FROM_DELIMITER.length(), toIndex).trim();
+            String to = rest.substring(toIndex + EVENT_TO_DELIMITER.length()).trim();
+
+            if (description.isEmpty() || from.isEmpty() || to.isEmpty()) {
+                printInvalidFormat("event DESCRIPTION /from FROM /to TO");
+                return null;
+            }
+
+            return new Event(description, from, to);
+        }
+
+        System.out.println(DIVIDER);
+        System.out.println("I do not understand. Try one of these formats:");
+        System.out.println("  todo DESCRIPTION");
+        System.out.println("  deadline DESCRIPTION /by BY");
+        System.out.println("  event DESCRIPTION /from FROM /to TO");
+        System.out.println(DIVIDER);
+        return null;
+    }
+
+    /**
+     * Marks or unmarks a task by index (1-based as the user sees it).
+     *
+     * @param tasks task array
+     * @param taskCount number of tasks currently stored
+     * @param userInput user command (e.g., "mark 2")
+     * @param isDone true to mark done, false to unmark
+     */
+    private static void handleMark(Task[] tasks, int taskCount, String userInput, boolean isDone) {
+        String numberPart = userInput.substring(isDone ? COMMAND_MARK.length() : COMMAND_UNMARK.length()).trim();
+
+        int taskNumber;
+        try {
+            taskNumber = Integer.parseInt(numberPart);
+        } catch (NumberFormatException e) {
+            System.out.println(DIVIDER);
+            System.out.println("That index is not a number.");
+            System.out.println(DIVIDER);
+            return;
+        }
+
+        int index = taskNumber - 1;
+        if (index < 0 || index >= taskCount) {
+            System.out.println(DIVIDER);
+            System.out.println("Invalid index! Please provide a valid task number.");
+            System.out.println(DIVIDER);
+            return;
+        }
+
+        tasks[index].setDone(isDone);
+
+        System.out.println(DIVIDER);
+        if (isDone) {
+            System.out.println("Fantabulous! The deed is done. Marked as complete:");
+        } else {
+            System.out.println("Very well. I shall consider it unfinished:");
+        }
+        System.out.println("  " + tasks[index]);
+        System.out.println(DIVIDER);
+    }
+
+    /**
+     * Prints the current list of tasks in a numbered format.
+     *
+     * @param tasks task array
+     * @param taskCount number of tasks stored
+     */
     private static void printList(Task[] tasks, int taskCount) {
         System.out.println(DIVIDER);
         System.out.println("Bretheren, please complete thy tasks");
 
-        // Handle empty task list
         if (taskCount == 0) {
             System.out.println("  (No quests assigned yet.)");
             System.out.println(DIVIDER);
@@ -243,6 +238,18 @@ public class Porus {
             System.out.println("  " + (i + 1) + "." + tasks[i]);
         }
 
+        System.out.println(DIVIDER);
+    }
+
+    /**
+     * Prints a consistent invalid format message.
+     *
+     * @param expectedFormat expected command format
+     */
+    private static void printInvalidFormat(String expectedFormat) {
+        System.out.println(DIVIDER);
+        System.out.println("Invalid format. Expected:");
+        System.out.println("  " + expectedFormat);
         System.out.println(DIVIDER);
     }
 }
