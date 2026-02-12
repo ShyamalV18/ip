@@ -6,16 +6,16 @@ import java.util.Scanner;
  */
 public class Porus {
 
-    private static final String DIVIDER = "--------------------------------------------------";
+    private static final String DIVIDER = "----------------------------------------------------------------------------------------------------";
     private static final int MAX_TASKS = 100;
 
     private static final String COMMAND_BYE = "bye";
     private static final String COMMAND_LIST = "list";
-    private static final String COMMAND_MARK = "mark ";
-    private static final String COMMAND_UNMARK = "unmark ";
-    private static final String COMMAND_TODO = "todo ";
-    private static final String COMMAND_DEADLINE = "deadline ";
-    private static final String COMMAND_EVENT = "event ";
+    private static final String COMMAND_MARK = "mark";
+    private static final String COMMAND_UNMARK = "unmark";
+    private static final String COMMAND_TODO = "todo";
+    private static final String COMMAND_DEADLINE = "deadline";
+    private static final String COMMAND_EVENT = "event";
 
     private static final String DEADLINE_BY_DELIMITER = " /by ";
     private static final String EVENT_FROM_DELIMITER = " /from ";
@@ -32,96 +32,63 @@ public class Porus {
         while (true) {
             String userInput = scanner.nextLine().trim();
 
-            if (userInput.equals(COMMAND_BYE)) {
-                printGoodbye();
-                break;
-            }
+            try {
+                if (userInput.equals(COMMAND_BYE)) {
+                    printGoodbye();
+                    break;
+                }
 
-            if (userInput.equals(COMMAND_LIST)) {
-                printList(tasks, taskCount);
-                continue;
-            }
+                if (userInput.equals(COMMAND_LIST)) {
+                    printList(tasks, taskCount);
+                    continue;
+                }
 
-            if (userInput.startsWith(COMMAND_MARK)) {
-                handleMark(tasks, taskCount, userInput, true);
-                continue;
-            }
+                if (userInput.startsWith(COMMAND_MARK)) {
+                    handleMark(tasks, taskCount, userInput, true);
+                    continue;
+                }
 
-            if (userInput.startsWith(COMMAND_UNMARK)) {
-                handleMark(tasks, taskCount, userInput, false);
-                continue;
-            }
+                if (userInput.startsWith(COMMAND_UNMARK)) {
+                    handleMark(tasks, taskCount, userInput, false);
+                    continue;
+                }
 
-            if (taskCount >= MAX_TASKS) {
+                if (taskCount >= MAX_TASKS) {
+                    throw new PorusException("My scroll is full. I cannot record more quests.");
+                }
+
+                Task newTask = parseTask(userInput);
+
+                tasks[taskCount++] = newTask;
+
                 System.out.println(DIVIDER);
-                System.out.println("My scroll is full. I cannot record more quests.");
+                System.out.println("  added: " + newTask);
+                System.out.println("  Now you have " + taskCount + " tasks in the list.");
                 System.out.println(DIVIDER);
-                continue;
+
+            } catch (PorusException e) {
+                System.out.println(DIVIDER);
+                System.out.println(e.getMessage());
+                System.out.println(DIVIDER);
             }
-
-            Task newTask = parseTask(userInput);
-            if (newTask == null) {
-                // Invalid command format.
-                continue;
-            }
-
-            tasks[taskCount] = newTask;
-            taskCount++;
-
-            System.out.println(DIVIDER);
-            System.out.println("  added: " + newTask);
-            System.out.println("  Now you have " + taskCount + " tasks in the list.");
-            System.out.println(DIVIDER);
         }
 
         scanner.close();
     }
 
     /**
-     * Prints the startup greeting and logo.
-     */
-    private static void printGreeting() {
-        String logo =
-                " ____    ___    ____   _   _    ____ \n"
-                        + "|  _ \\  / _ \\  |  _ \\ | | | |  / ___|\n"
-                        + "| |_) || | | | | |_) || | | |  \\___ \\\n"
-                        + "|  __/ | |_| | |  _ < | |_| |   ___) |\n"
-                        + "|_|     \\___/  |_| \\_\\ \\___/   |____/\n";
-
-        System.out.println("Greetings! I'm");
-        System.out.println(logo);
-        System.out.println("(Personally Operating Real Understanding Service)");
-        System.out.println("How may I assist you today?");
-        System.out.println(DIVIDER);
-    }
-
-    /**
-     * Prints the goodbye message and divider.
-     */
-    private static void printGoodbye() {
-        System.out.println(DIVIDER);
-        System.out.println("Farewell. Glad to be of service!");
-        System.out.println(DIVIDER);
-    }
-
-    /**
-     * Parses user input into a Task object if it matches a supported Level 4 command.
-     * Returns null (and prints a message) if the command format is invalid.
-     *
-     * Supported:
-     * - todo DESCRIPTION
-     * - deadline DESCRIPTION /by BY
-     * - event DESCRIPTION /from FROM /to TO
+     * Parses user input into a Task object.
      *
      * @param userInput raw user input line
-     * @return created Task, or null if invalid
+     * @return created Task
+     * @throws PorusException if command format is invalid
      */
-    private static Task parseTask(String userInput) {
+    private static Task parseTask(String userInput) throws PorusException {
+
         if (userInput.startsWith(COMMAND_TODO)) {
             String description = userInput.substring(COMMAND_TODO.length()).trim();
             if (description.isEmpty()) {
-                printInvalidFormat("todo DESCRIPTION");
-                return null;
+                throw new PorusException("The description of a todo cannot be empty bretheren.");
             }
             return new Todo(description);
         }
@@ -129,17 +96,16 @@ public class Porus {
         if (userInput.startsWith(COMMAND_DEADLINE)) {
             String rest = userInput.substring(COMMAND_DEADLINE.length()).trim();
             int byIndex = rest.indexOf(DEADLINE_BY_DELIMITER);
+
             if (byIndex < 0) {
-                printInvalidFormat("deadline DESCRIPTION /by BY");
-                return null;
+                throw new PorusException("Format: deadline DESCRIPTION /by DATE");
             }
 
             String description = rest.substring(0, byIndex).trim();
             String by = rest.substring(byIndex + DEADLINE_BY_DELIMITER.length()).trim();
 
             if (description.isEmpty() || by.isEmpty()) {
-                printInvalidFormat("deadline DESCRIPTION /by BY");
-                return null;
+                throw new PorusException("Deadline must include description and /by date.");
             }
 
             return new Deadline(description, by);
@@ -152,8 +118,7 @@ public class Porus {
             int toIndex = rest.indexOf(EVENT_TO_DELIMITER);
 
             if (fromIndex < 0 || toIndex < 0 || toIndex < fromIndex) {
-                printInvalidFormat("event DESCRIPTION /from FROM /to TO");
-                return null;
+                throw new PorusException("Format: event DESCRIPTION /from START /to END");
             }
 
             String description = rest.substring(0, fromIndex).trim();
@@ -161,65 +126,54 @@ public class Porus {
             String to = rest.substring(toIndex + EVENT_TO_DELIMITER.length()).trim();
 
             if (description.isEmpty() || from.isEmpty() || to.isEmpty()) {
-                printInvalidFormat("event DESCRIPTION /from FROM /to TO");
-                return null;
+                throw new PorusException("Event must include description, /from and /to.");
             }
 
             return new Event(description, from, to);
         }
 
-        System.out.println(DIVIDER);
-        System.out.println("I do not understand. Try one of these formats:");
-        System.out.println("  todo DESCRIPTION");
-        System.out.println("  deadline DESCRIPTION /by BY");
-        System.out.println("  event DESCRIPTION /from FROM /to TO");
-        System.out.println(DIVIDER);
-        return null;
+        throw new PorusException("I do not understand that command. I will make you regret your existence.");
     }
 
     /**
-     * Marks or unmarks a task by index (1-based as the user sees it).
+     * Marks or unmarks a task by index.
      *
      * @param tasks task array
-     * @param taskCount number of tasks currently stored
-     * @param userInput user command (e.g., "mark 2")
+     * @param taskCount number of tasks stored
+     * @param userInput user command
      * @param isDone true to mark done, false to unmark
+     * @throws PorusException if index is invalid
      */
-    private static void handleMark(Task[] tasks, int taskCount, String userInput, boolean isDone) {
-        String numberPart = userInput.substring(isDone ? COMMAND_MARK.length() : COMMAND_UNMARK.length()).trim();
+    private static void handleMark(Task[] tasks, int taskCount,
+                                   String userInput, boolean isDone)
+            throws PorusException {
+
+        String numberPart = userInput.substring(
+                isDone ? COMMAND_MARK.length() : COMMAND_UNMARK.length()).trim();
 
         int taskNumber;
+
         try {
             taskNumber = Integer.parseInt(numberPart);
         } catch (NumberFormatException e) {
-            System.out.println(DIVIDER);
-            System.out.println("That index is not a number.");
-            System.out.println(DIVIDER);
-            return;
+            throw new PorusException("Task index must be a valid number.");
         }
 
         int index = taskNumber - 1;
+
         if (index < 0 || index >= taskCount) {
-            System.out.println(DIVIDER);
-            System.out.println("Invalid index! Please provide a valid task number.");
-            System.out.println(DIVIDER);
-            return;
+            throw new PorusException("Invalid task number. Are you slow?");
         }
 
         tasks[index].setDone(isDone);
 
         System.out.println(DIVIDER);
-        if (isDone) {
-            System.out.println("Fantabulous! The deed is done. Marked as complete:");
-        } else {
-            System.out.println("Very well. I shall consider it unfinished:");
-        }
         System.out.println("  " + tasks[index]);
         System.out.println(DIVIDER);
     }
 
     /**
-     * Prints the current list of tasks in a numbered format.
+     * Prints the current list of tasks.
      *
      * @param tasks task array
      * @param taskCount number of tasks stored
@@ -242,14 +196,29 @@ public class Porus {
     }
 
     /**
-     * Prints a consistent invalid format message.
-     *
-     * @param expectedFormat expected command format
+     * Prints the startup greeting and logo.
      */
-    private static void printInvalidFormat(String expectedFormat) {
+    private static void printGreeting() {
+        String logo =
+                " ____    ___    ____   _   _    ____ \n"
+                        + "|  _ \\  / _ \\  |  _ \\ | | | |  / ___|\n"
+                        + "| |_) || | | | | |_) || | | |  \\___ \\\n"
+                        + "|  __/ | |_| | |  _ < | |_| |   ___) |\n"
+                        + "|_|     \\___/  |_| \\_\\ \\___/   |____/\n";
+
+        System.out.println("Greetings! I'm");
+        System.out.println(logo);
+        System.out.println("(Personally Operating Real Understanding Service)");
+        System.out.println("How may I assist you today?");
         System.out.println(DIVIDER);
-        System.out.println("Invalid format. Expected:");
-        System.out.println("  " + expectedFormat);
+    }
+
+    /**
+     * Prints the goodbye message.
+     */
+    private static void printGoodbye() {
+        System.out.println(DIVIDER);
+        System.out.println("Farewell. Glad to be of service!");
         System.out.println(DIVIDER);
     }
 }
