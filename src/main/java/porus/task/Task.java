@@ -2,6 +2,8 @@
  * Represents a generic task with a description and completion status.
  * Subclasses add task-specific fields (e.g., deadlines, event times).
  */
+package porus.task;
+
 public abstract class Task {
 
     private String description;

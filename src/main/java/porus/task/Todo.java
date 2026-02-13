@@ -1,10 +1,13 @@
+package porus.task;
 /**
  * A todo task that has only a description.
  */
+
+
 public class Todo extends Task {
 
     /**
-     * Creates a Todo task.
+     * Creates a porus.task.Todo task.
      *
      * @param description description of the todo
      */
