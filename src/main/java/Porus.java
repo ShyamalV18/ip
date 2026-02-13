@@ -162,7 +162,7 @@ public class Porus {
         int index = taskNumber - 1;
 
         if (index < 0 || index >= taskCount) {
-            throw new PorusException("Invalid task number. Are you slow?");
+            throw new PorusException("Invalid task number. Please rethink thy life choices.");
         }
 
         tasks[index].setDone(isDone);
