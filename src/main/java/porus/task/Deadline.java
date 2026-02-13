@@ -1,3 +1,5 @@
+package porus.task;
+
 /**
  * A task that must be completed by a specific time (stored as text).
  */
@@ -6,7 +8,7 @@ public class Deadline extends Task {
     private String by;
 
     /**
-     * Creates a Deadline task.
+     * Creates a porus.task.Deadline task.
      *
      * @param description task description
      * @param by deadline detail (e.g., "Sunday", "2026-02-10 1800")

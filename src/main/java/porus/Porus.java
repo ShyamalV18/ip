@@ -1,3 +1,7 @@
+package porus;
+
+import porus.task.*;
+
 import java.util.Scanner;
 
 /**
@@ -105,7 +109,7 @@ public class Porus {
             String by = rest.substring(byIndex + DEADLINE_BY_DELIMITER.length()).trim();
 
             if (description.isEmpty() || by.isEmpty()) {
-                throw new PorusException("Deadline must include description and /by date.");
+                throw new PorusException("porus.task.Deadline must include description and /by date.");
             }
 
             return new Deadline(description, by);
@@ -126,7 +130,7 @@ public class Porus {
             String to = rest.substring(toIndex + EVENT_TO_DELIMITER.length()).trim();
 
             if (description.isEmpty() || from.isEmpty() || to.isEmpty()) {
-                throw new PorusException("Event must include description, /from and /to.");
+                throw new PorusException("porus.task.Event must include description, /from and /to.");
             }
 
             return new Event(description, from, to);

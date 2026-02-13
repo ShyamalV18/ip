@@ -1,3 +1,5 @@
+package porus.task;
+
 /**
  * A task that occurs during a time window (stored as text).
  */
@@ -7,7 +9,7 @@ public class Event extends Task {
     private String to;
 
     /**
-     * Creates an Event task.
+     * Creates an porus.task.Event task.
      *
      * @param description event description
      * @param from start time detail (e.g., "Mon 2pm")

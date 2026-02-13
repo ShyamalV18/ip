@@ -1,6 +1,8 @@
 /**
  * Represents an exception specific to Porus chatbot.
  */
+package porus;
+
 public class PorusException extends Exception {
 
     /**
