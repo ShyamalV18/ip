@@ -2,36 +2,58 @@ package porus;
 
 import porus.task.*;
 
+import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
  * Entry point and command loop for the Porus chatbot.
- * Reads user commands, creates tasks, marks/unmarks tasks, and lists tasks.
+ * <p>
+ * This class handles:
+ * <ul>
+ *     <li>User input processing</li>
+ *     <li>Task creation (Todo, Deadline, Event)</li>
+ *     <li>Marking and unmarking tasks</li>
+ *     <li>Deleting tasks</li>
+ *     <li>Listing tasks</li>
+ * </ul>
+ * Tasks are stored using {@code ArrayList<Task>} to satisfy
+ * the A-Collections requirement.
  */
 public class Porus {
 
-    private static final String DIVIDER = "----------------------------------------------------------------------------------------------------";
-    private static final int MAX_TASKS = 100;
+    /** Divider line used for formatting output. */
+    private static final String DIVIDER =
+            "----------------------------------------------------------------------------------------------------";
 
+    /** Supported command keywords. */
     private static final String COMMAND_BYE = "bye";
     private static final String COMMAND_LIST = "list";
     private static final String COMMAND_MARK = "mark";
     private static final String COMMAND_UNMARK = "unmark";
+    private static final String COMMAND_DELETE = "delete";
     private static final String COMMAND_TODO = "todo";
     private static final String COMMAND_DEADLINE = "deadline";
     private static final String COMMAND_EVENT = "event";
+    private static final String FILE_PATH = "./data/porus.txt";
 
+
+    /** Delimiters for parsing complex commands. */
     private static final String DEADLINE_BY_DELIMITER = " /by ";
     private static final String EVENT_FROM_DELIMITER = " /from ";
     private static final String EVENT_TO_DELIMITER = " /to ";
 
+    /**
+     * Starts the Porus chatbot.
+     *
+     * @param args command line arguments (unused)
+     */
     public static void main(String[] args) {
         printGreeting();
 
         Scanner scanner = new Scanner(System.in);
+        Storage storage = new Storage(FILE_PATH);
+        ArrayList<Task> tasks = storage.load();
 
-        Task[] tasks = new Task[MAX_TASKS];
-        int taskCount = 0;
 
         while (true) {
             String userInput = scanner.nextLine().trim();
@@ -43,31 +65,33 @@ public class Porus {
                 }
 
                 if (userInput.equals(COMMAND_LIST)) {
-                    printList(tasks, taskCount);
+                    printList(tasks);
                     continue;
                 }
 
                 if (userInput.startsWith(COMMAND_MARK)) {
-                    handleMark(tasks, taskCount, userInput, true);
+                    handleMark(tasks, userInput, true, storage);
                     continue;
                 }
 
                 if (userInput.startsWith(COMMAND_UNMARK)) {
-                    handleMark(tasks, taskCount, userInput, false);
+                    handleMark(tasks, userInput, false, storage);
                     continue;
                 }
 
-                if (taskCount >= MAX_TASKS) {
-                    throw new PorusException("My scroll is full. I cannot record more quests.");
+                if (userInput.startsWith(COMMAND_DELETE)) {
+                    handleDelete(tasks, userInput, storage);
+                    continue;
                 }
 
                 Task newTask = parseTask(userInput);
+                tasks.add(newTask);
+                storage.save(tasks);
 
-                tasks[taskCount++] = newTask;
 
                 System.out.println(DIVIDER);
                 System.out.println("  added: " + newTask);
-                System.out.println("  Now you have " + taskCount + " tasks in the list.");
+                System.out.println("  Now you have " + tasks.size() + " tasks in the list.");
                 System.out.println(DIVIDER);
 
             } catch (PorusException e) {
@@ -81,18 +105,19 @@ public class Porus {
     }
 
     /**
-     * Parses user input into a Task object.
+     * Parses user input into a corresponding {@code Task}.
      *
-     * @param userInput raw user input line
-     * @return created Task
-     * @throws PorusException if command format is invalid
+     * @param userInput the raw user input
+     * @return the created {@code Task}
+     * @throws PorusException if the command format is invalid
      */
     private static Task parseTask(String userInput) throws PorusException {
 
         if (userInput.startsWith(COMMAND_TODO)) {
             String description = userInput.substring(COMMAND_TODO.length()).trim();
             if (description.isEmpty()) {
-                throw new PorusException("The description of a todo cannot be empty bretheren.");
+                throw new PorusException(
+                        "The description of a todo cannot be empty bretheren.");
             }
             return new Todo(description);
         }
@@ -102,14 +127,17 @@ public class Porus {
             int byIndex = rest.indexOf(DEADLINE_BY_DELIMITER);
 
             if (byIndex < 0) {
-                throw new PorusException("Format: deadline DESCRIPTION /by DATE");
+                throw new PorusException(
+                        "Format: deadline DESCRIPTION /by DATE");
             }
 
             String description = rest.substring(0, byIndex).trim();
-            String by = rest.substring(byIndex + DEADLINE_BY_DELIMITER.length()).trim();
+            String by = rest.substring(
+                    byIndex + DEADLINE_BY_DELIMITER.length()).trim();
 
             if (description.isEmpty() || by.isEmpty()) {
-                throw new PorusException("porus.task.Deadline must include description and /by date.");
+                throw new PorusException(
+                        "porus.task.Deadline must include description and /by date.");
             }
 
             return new Deadline(description, by);
@@ -122,34 +150,39 @@ public class Porus {
             int toIndex = rest.indexOf(EVENT_TO_DELIMITER);
 
             if (fromIndex < 0 || toIndex < 0 || toIndex < fromIndex) {
-                throw new PorusException("Format: event DESCRIPTION /from START /to END");
+                throw new PorusException(
+                        "Format: event DESCRIPTION /from START /to END");
             }
 
             String description = rest.substring(0, fromIndex).trim();
-            String from = rest.substring(fromIndex + EVENT_FROM_DELIMITER.length(), toIndex).trim();
-            String to = rest.substring(toIndex + EVENT_TO_DELIMITER.length()).trim();
+            String from = rest.substring(
+                    fromIndex + EVENT_FROM_DELIMITER.length(), toIndex).trim();
+            String to = rest.substring(
+                    toIndex + EVENT_TO_DELIMITER.length()).trim();
 
             if (description.isEmpty() || from.isEmpty() || to.isEmpty()) {
-                throw new PorusException("porus.task.Event must include description, /from and /to.");
+                throw new PorusException(
+                        "porus.task.Event must include description, /from and /to.");
             }
 
             return new Event(description, from, to);
         }
 
-        throw new PorusException("I do not understand that command. I will make you regret your existence.");
+        throw new PorusException(
+                "I do not understand that command. I will make you regret your existence.");
     }
 
     /**
-     * Marks or unmarks a task by index.
+     * Marks or unmarks a task based on user input.
      *
-     * @param tasks task array
-     * @param taskCount number of tasks stored
-     * @param userInput user command
-     * @param isDone true to mark done, false to unmark
-     * @throws PorusException if index is invalid
+     * @param tasks the list of tasks
+     * @param userInput the full command string
+     * @param isDone true to mark complete, false to unmark
+     * @throws PorusException if the index is invalid
      */
-    private static void handleMark(Task[] tasks, int taskCount,
-                                   String userInput, boolean isDone)
+    private static void handleMark(ArrayList<Task> tasks,
+                                   String userInput,
+                                   boolean isDone, Storage storage)
             throws PorusException {
 
         String numberPart = userInput.substring(
@@ -165,35 +198,81 @@ public class Porus {
 
         int index = taskNumber - 1;
 
-        if (index < 0 || index >= taskCount) {
-            throw new PorusException("Invalid task number. Please rethink thy life choices.");
+        if (index < 0 || index >= tasks.size()) {
+            throw new PorusException(
+                    "Invalid task number. Please rethink thy life choices.");
         }
 
-        tasks[index].setDone(isDone);
+        tasks.get(index).setDone(isDone);
 
         System.out.println(DIVIDER);
-        System.out.println("  " + tasks[index]);
+        System.out.println("  " + tasks.get(index));
         System.out.println(DIVIDER);
+        storage.save(tasks);
+
     }
 
     /**
-     * Prints the current list of tasks.
+     * Deletes a task from the list.
      *
-     * @param tasks task array
-     * @param taskCount number of tasks stored
+     * @param tasks the list of tasks
+     * @param userInput the full command string
+     * @throws PorusException if the index is invalid
      */
-    private static void printList(Task[] tasks, int taskCount) {
+    private static void handleDelete(ArrayList<Task> tasks,
+                                     String userInput, Storage storage)
+            throws PorusException {
+
+        String numberPart =
+                userInput.substring(COMMAND_DELETE.length()).trim();
+
+        if (numberPart.isEmpty()) {
+            throw new PorusException(
+                    "Please specify a task number to delete.");
+        }
+
+        int taskNumber;
+
+        try {
+            taskNumber = Integer.parseInt(numberPart);
+        } catch (NumberFormatException e) {
+            throw new PorusException("Task index must be a valid number.");
+        }
+
+        int index = taskNumber - 1;
+
+        if (index < 0 || index >= tasks.size()) {
+            throw new PorusException(
+                    "Invalid task number. Please rethink thy life choices.");
+        }
+
+        Task removedTask = tasks.remove(index);
+
+        System.out.println(DIVIDER);
+        System.out.println("Noted. I've removed this task:");
+        System.out.println("  " + removedTask);
+        System.out.println("Now you have " + tasks.size() + " tasks in the list.");
+        System.out.println(DIVIDER);
+        storage.save(tasks);
+    }
+
+    /**
+     * Prints all tasks currently stored.
+     *
+     * @param tasks the list of tasks
+     */
+    private static void printList(ArrayList<Task> tasks) {
         System.out.println(DIVIDER);
         System.out.println("Bretheren, please complete thy tasks");
 
-        if (taskCount == 0) {
+        if (tasks.isEmpty()) {
             System.out.println("  (No quests assigned yet.)");
             System.out.println(DIVIDER);
             return;
         }
 
-        for (int i = 0; i < taskCount; i++) {
-            System.out.println("  " + (i + 1) + "." + tasks[i]);
+        for (int i = 0; i < tasks.size(); i++) {
+            System.out.println("  " + (i + 1) + "." + tasks.get(i));
         }
 
         System.out.println(DIVIDER);
@@ -226,6 +305,7 @@ public class Porus {
         System.out.println(DIVIDER);
     }
 }
+
 
 
 
