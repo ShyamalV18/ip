@@ -34,6 +34,8 @@ public class Porus {
     private static final String COMMAND_TODO = "todo";
     private static final String COMMAND_DEADLINE = "deadline";
     private static final String COMMAND_EVENT = "event";
+    private static final String FILE_PATH = "./data/porus.txt";
+
 
     /** Delimiters for parsing complex commands. */
     private static final String DEADLINE_BY_DELIMITER = " /by ";
@@ -49,7 +51,9 @@ public class Porus {
         printGreeting();
 
         Scanner scanner = new Scanner(System.in);
-        ArrayList<Task> tasks = new ArrayList<>();
+        Storage storage = new Storage(FILE_PATH);
+        ArrayList<Task> tasks = storage.load();
+
 
         while (true) {
             String userInput = scanner.nextLine().trim();
@@ -66,22 +70,24 @@ public class Porus {
                 }
 
                 if (userInput.startsWith(COMMAND_MARK)) {
-                    handleMark(tasks, userInput, true);
+                    handleMark(tasks, userInput, true, storage);
                     continue;
                 }
 
                 if (userInput.startsWith(COMMAND_UNMARK)) {
-                    handleMark(tasks, userInput, false);
+                    handleMark(tasks, userInput, false, storage);
                     continue;
                 }
 
                 if (userInput.startsWith(COMMAND_DELETE)) {
-                    handleDelete(tasks, userInput);
+                    handleDelete(tasks, userInput, storage);
                     continue;
                 }
 
                 Task newTask = parseTask(userInput);
                 tasks.add(newTask);
+                storage.save(tasks);
+
 
                 System.out.println(DIVIDER);
                 System.out.println("  added: " + newTask);
@@ -176,7 +182,7 @@ public class Porus {
      */
     private static void handleMark(ArrayList<Task> tasks,
                                    String userInput,
-                                   boolean isDone)
+                                   boolean isDone, Storage storage)
             throws PorusException {
 
         String numberPart = userInput.substring(
@@ -202,6 +208,8 @@ public class Porus {
         System.out.println(DIVIDER);
         System.out.println("  " + tasks.get(index));
         System.out.println(DIVIDER);
+        storage.save(tasks);
+
     }
 
     /**
@@ -212,7 +220,7 @@ public class Porus {
      * @throws PorusException if the index is invalid
      */
     private static void handleDelete(ArrayList<Task> tasks,
-                                     String userInput)
+                                     String userInput, Storage storage)
             throws PorusException {
 
         String numberPart =
@@ -245,6 +253,7 @@ public class Porus {
         System.out.println("  " + removedTask);
         System.out.println("Now you have " + tasks.size() + " tasks in the list.");
         System.out.println(DIVIDER);
+        storage.save(tasks);
     }
 
     /**
@@ -296,3 +305,7 @@ public class Porus {
         System.out.println(DIVIDER);
     }
 }
+
+
+
+
