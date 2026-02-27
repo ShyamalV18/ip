@@ -6,13 +6,11 @@ import java.util.ArrayList;
 
 /**
  * Entry point and main command loop for Porus.
- * Coordinates UI, Storage and task handling.
  */
 public class Porus {
 
     private static final String FILE_PATH = "./data/porus.txt";
 
-    /** Supported command keywords. */
     private static final String COMMAND_BYE = "bye";
     private static final String COMMAND_LIST = "list";
     private static final String COMMAND_MARK = "mark";
@@ -22,7 +20,6 @@ public class Porus {
     private static final String COMMAND_DEADLINE = "deadline";
     private static final String COMMAND_EVENT = "event";
 
-    /** Delimiters for parsing complex commands. */
     private static final String DEADLINE_BY_DELIMITER = " /by ";
     private static final String EVENT_FROM_DELIMITER = " /from ";
     private static final String EVENT_TO_DELIMITER = " /to ";
@@ -31,7 +28,7 @@ public class Porus {
 
         UI ui = new UI();
         Storage storage = new Storage(FILE_PATH);
-        ArrayList<Task> tasks = storage.load();
+        TaskList tasks = new TaskList(storage.load());
 
         ui.showGreeting();
 
@@ -45,7 +42,7 @@ public class Porus {
                 }
 
                 if (userInput.equals(COMMAND_LIST)) {
-                    ui.showList(tasks);
+                    ui.showList(tasks.getAll());
                     continue;
                 }
 
@@ -66,7 +63,7 @@ public class Porus {
 
                 Task newTask = parseTask(userInput);
                 tasks.add(newTask);
-                storage.save(tasks);
+                storage.save(tasks.getAll());
 
                 ui.showLine();
                 System.out.println("  added: " + newTask);
@@ -79,12 +76,66 @@ public class Porus {
         }
     }
 
+    private static void handleMark(TaskList tasks,
+                                   String userInput,
+                                   boolean isDone,
+                                   Storage storage,
+                                   UI ui) throws PorusException {
+
+        String numberPart = userInput.substring(
+                isDone ? COMMAND_MARK.length() : COMMAND_UNMARK.length()).trim();
+
+        int taskNumber;
+
+        try {
+            taskNumber = Integer.parseInt(numberPart);
+        } catch (NumberFormatException e) {
+            throw new PorusException("Task index must be a valid number.");
+        }
+
+        Task updatedTask = tasks.mark(taskNumber - 1, isDone);
+        storage.save(tasks.getAll());
+
+        ui.showLine();
+        System.out.println("  " + updatedTask);
+        ui.showLine();
+    }
+
+    private static void handleDelete(TaskList tasks,
+                                     String userInput,
+                                     Storage storage,
+                                     UI ui) throws PorusException {
+
+        String numberPart = userInput.substring(COMMAND_DELETE.length()).trim();
+
+        if (numberPart.isEmpty()) {
+            throw new PorusException("Please specify a task number to delete.");
+        }
+
+        int taskNumber;
+
+        try {
+            taskNumber = Integer.parseInt(numberPart);
+        } catch (NumberFormatException e) {
+            throw new PorusException("Task index must be a valid number.");
+        }
+
+        Task removedTask = tasks.remove(taskNumber - 1);
+        storage.save(tasks.getAll());
+
+        ui.showLine();
+        System.out.println("Noted. I've removed this task:");
+        System.out.println("  " + removedTask);
+        System.out.println("Now you have " + tasks.size() + " tasks in the list.");
+        ui.showLine();
+    }
+
     private static Task parseTask(String userInput) throws PorusException {
 
         if (userInput.startsWith(COMMAND_TODO)) {
             String description = userInput.substring(COMMAND_TODO.length()).trim();
             if (description.isEmpty()) {
-                throw new PorusException("The description of a todo cannot be empty bretheren.");
+                throw new PorusException("The description of a todo cannot be empty.");
             }
             return new Todo(description);
         }
@@ -130,72 +181,5 @@ public class Porus {
 
         throw new PorusException("I do not understand that command.");
     }
-
-    private static void handleMark(ArrayList<Task> tasks,
-                                   String userInput,
-                                   boolean isDone,
-                                   Storage storage,
-                                   UI ui) throws PorusException {
-
-        String numberPart = userInput.substring(
-                isDone ? COMMAND_MARK.length() : COMMAND_UNMARK.length()).trim();
-
-        int taskNumber;
-
-        try {
-            taskNumber = Integer.parseInt(numberPart);
-        } catch (NumberFormatException e) {
-            throw new PorusException("Task index must be a valid number.");
-        }
-
-        int index = taskNumber - 1;
-
-        if (index < 0 || index >= tasks.size()) {
-            throw new PorusException("Invalid task number.");
-        }
-
-        tasks.get(index).setDone(isDone);
-        storage.save(tasks);
-
-        ui.showLine();
-        System.out.println("  " + tasks.get(index));
-        ui.showLine();
-    }
-
-    private static void handleDelete(ArrayList<Task> tasks,
-                                     String userInput,
-                                     Storage storage,
-                                     UI ui) throws PorusException {
-
-        String numberPart = userInput.substring(COMMAND_DELETE.length()).trim();
-
-        if (numberPart.isEmpty()) {
-            throw new PorusException("Please specify a task number to delete.");
-        }
-
-        int taskNumber;
-
-        try {
-            taskNumber = Integer.parseInt(numberPart);
-        } catch (NumberFormatException e) {
-            throw new PorusException("Task index must be a valid number.");
-        }
-
-        int index = taskNumber - 1;
-
-        if (index < 0 || index >= tasks.size()) {
-            throw new PorusException("Invalid task number.");
-        }
-
-        Task removedTask = tasks.remove(index);
-        storage.save(tasks);
-
-        ui.showLine();
-        System.out.println("Noted. I've removed this task:");
-        System.out.println("  " + removedTask);
-        System.out.println("Now you have " + tasks.size() + " tasks in the list.");
-        ui.showLine();
-    }
 }
-
 
