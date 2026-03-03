@@ -73,7 +73,12 @@ public class Parser {
             return new AddCommand(new Event(desc, from, to));
         }
 
-        throw new PorusException("I do not understand that command.");
+        if (input.startsWith("find ")) {
+            String keyword = input.substring(5).trim();
+            return new FindCommand(keyword);
+        }
+
+        throw new PorusException("I do not understand that command. I will make thy regret thy existence.");
     }
 
     private static int parseIndex(String number) throws PorusException {
