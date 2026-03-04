@@ -3,12 +3,19 @@ package porus;
 import porus.command.Command;
 
 /**
- * Main application entry.
+ * Entry point of the Porus task management application.
+ * Manages program initialization and the main execution loop.
  */
 public class Porus {
 
     private static final String FILE_PATH = "./data/porus.txt";
 
+    /**
+     * Launches the Porus application.
+     * Initializes UI, storage, and task list before entering the main loop.
+     *
+     * @param args Command-line arguments (not used).
+     */
     public static void main(String[] args) {
 
         UI ui = new UI();
@@ -30,4 +37,3 @@ public class Porus {
         }
     }
 }
-
