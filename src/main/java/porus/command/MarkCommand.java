@@ -21,7 +21,15 @@ public class MarkCommand extends Command {
         storage.save(tasks.getAll());
 
         ui.showLine();
+
+        if (isDone) {
+            System.out.println("Good job bretheren! I've marked this task as done:");
+        } else {
+            System.out.println("OK, I've marked this task as not done yet, dont be noob please:");
+        }
+
         System.out.println("  " + task);
+
         ui.showLine();
 
         return false;

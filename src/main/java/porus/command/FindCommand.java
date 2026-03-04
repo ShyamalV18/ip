@@ -24,10 +24,14 @@ public class FindCommand extends Command {
         for (int i = 0; i < tasks.size(); i++) {
             Task t = tasks.get(i);
 
-            if (t.getDescription().toLowerCase()
-                    .contains(keyword.toLowerCase())) {
-                count++;
-                System.out.println("  " + count + "." + t);
+            String[] words = t.getDescription().toLowerCase().split("\\s+");
+
+            for (String word : words) {
+                if (word.equals(keyword.toLowerCase())) {
+                    count++;
+                    System.out.println("  " + count + "." + t);
+                    break;
+                }
             }
         }
 
