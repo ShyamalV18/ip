@@ -3,12 +3,23 @@ package porus;
 import porus.command.*;
 import porus.task.*;
 
+/**
+ * Parses user input strings and converts them into executable Command objects.
+ * Responsible for interpreting command keywords and extracting relevant arguments.
+ */
 public class Parser {
 
     private static final String DEADLINE_BY_DELIMITER = " /by ";
     private static final String EVENT_FROM_DELIMITER = " /from ";
     private static final String EVENT_TO_DELIMITER = " /to ";
 
+    /**
+     * Parses a user input string and returns the corresponding Command.
+     *
+     * @param input The raw user input.
+     * @return A Command object representing the user's request.
+     * @throws PorusException If the input is invalid or incorrectly formatted.
+     */
     public static Command parse(String input) throws PorusException {
 
         if (input.equals("bye")) {
@@ -81,6 +92,13 @@ public class Parser {
         throw new PorusException("I do not understand that command. I will make thy regret thy existence.");
     }
 
+    /**
+     * Parses a string into an integer index.
+     *
+     * @param number The string representing a task index.
+     * @return The parsed integer value.
+     * @throws PorusException If the string is not a valid number.
+     */
     private static int parseIndex(String number) throws PorusException {
         try {
             return Integer.parseInt(number);
