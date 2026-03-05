@@ -18,16 +18,16 @@ It allows you to manage your tasks efficiently using simple text commands.
 
 - [Quick Start](#quick-start)
 - [Features](#features)
-   - [Adding Tasks](#adding-tasks)
-      - [Todo](#1-todo)
-      - [Deadline](#2-deadline)
-      - [Event](#3-event)
-   - [Listing Tasks](#listing-tasks)
-   - [Marking Tasks as Done](#marking-tasks-as-done)
-   - [Unmarking Tasks](#unmarking-tasks)
-   - [Deleting Tasks](#deleting-tasks)
-   - [Finding Tasks](#finding-tasks)
-   - [Exiting the Program](#exiting-the-program)
+    - [Adding Tasks](#adding-tasks)
+        - [Todo](#1-todo)
+        - [Deadline](#2-deadline)
+        - [Event](#3-event)
+    - [Listing Tasks](#listing-tasks)
+    - [Marking Tasks as Done](#marking-tasks-as-done)
+    - [Unmarking Tasks](#unmarking-tasks)
+    - [Deleting Tasks](#deleting-tasks)
+    - [Finding Tasks](#finding-tasks)
+    - [Exiting the Program](#exiting-the-program)
 - [Data Storage](#data-storage)
 - [Error Handling](#error-handling)
 - [Command Summary](#command-summary)
@@ -42,10 +42,8 @@ It allows you to manage your tasks efficiently using simple text commands.
 3. Copy the jar file into a folder of your choice.
 4. Open a terminal and navigate to that folder.
 5. Run:
-```
 
-java -jar porus.jar
-```
+        java -jar porus.jar
 
 6. Type commands and press **Enter** to execute them.
 
@@ -66,16 +64,12 @@ Porus supports three types of tasks.
 Adds a simple task without date/time.
 
 **Format:**
-```
 
-todo DESCRIPTION
-```
+    todo DESCRIPTION
 
 **Example:**
-```
 
-todo read book
-```
+    todo read book
 
 ---
 
@@ -84,16 +78,12 @@ todo read book
 Adds a task with a deadline.
 
 **Format:**
-```
 
-deadline DESCRIPTION /by DATE
-```
+    deadline DESCRIPTION /by DATE
 
 **Example:**
-```
 
-deadline submit assignment /by Friday 5pm
-```
+    deadline submit assignment /by Friday 5pm
 
 > **Note:** `/by` is required for deadlines.
 
@@ -104,16 +94,12 @@ deadline submit assignment /by Friday 5pm
 Adds a task with a start and end time.
 
 **Format:**
-```
 
-event DESCRIPTION /from START /to END
-```
+    event DESCRIPTION /from START /to END
 
 **Example:**
-```
 
-event project meeting /from 2pm /to 4pm
-```
+    event project meeting /from 2pm /to 4pm
 
 > **Note:** Both `/from` and `/to` are required.
 
@@ -124,10 +110,8 @@ event project meeting /from 2pm /to 4pm
 Displays all tasks in your list.
 
 **Format:**
-```
 
-list
-```
+    list
 
 ---
 
@@ -136,16 +120,12 @@ list
 Marks a task as completed.
 
 **Format:**
-```
 
-mark TASK_NUMBER
-```
+    mark TASK_NUMBER
 
 **Example:**
-```
 
-mark 2
-```
+    mark 2
 
 ---
 
@@ -154,16 +134,12 @@ mark 2
 Marks a completed task as not done.
 
 **Format:**
-```
 
-unmark TASK_NUMBER
-```
+    unmark TASK_NUMBER
 
 **Example:**
-```
 
-unmark 2
-```
+    unmark 2
 
 ---
 
@@ -172,16 +148,12 @@ unmark 2
 Deletes a task from the list.
 
 **Format:**
-```
 
-delete TASK_NUMBER
-```
+    delete TASK_NUMBER
 
 **Example:**
-```
 
-delete 1
-```
+    delete 1
 
 ---
 
@@ -190,25 +162,21 @@ delete 1
 Finds tasks containing an exact keyword match.
 
 **Format:**
-```
 
-find KEYWORD
-```
+    find KEYWORD
 
 **Example:**
-```
 
-find book
-```
+    find book
 
 ### Matching Rules
 
 - Search is **case-insensitive**
 - Only **full words** are matched
 - `find book` will match:
-   - `return book`
+    - `return book`
 - It will NOT match:
-   - `bookmark`
+    - `bookmark`
 
 ---
 
@@ -217,10 +185,8 @@ find book
 Closes Porus.
 
 **Format:**
-```
 
-bye
-```
+    bye
 
 ---
 
@@ -229,10 +195,8 @@ bye
 All tasks are automatically saved after every change.
 
 Data file location:
-```
 
-./data/porus.txt
-```
+    ./data/porus.txt
 
 There is no need to manually save.
 
