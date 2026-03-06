@@ -10,7 +10,7 @@ It allows you to manage your tasks efficiently using simple text commands.
 
 ## Screenshot
 
-![Porus Screenshot](docs/screenshot1.png)
+![Porus Screenshot](https://raw.githubusercontent.com/shyamalv18/ip/master/docs/screenshot1.png)
 
 ---
 
